@@ -9,14 +9,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Neutrals -->
-    <!-- Application Structure Plan: The SPA is designed as a vertical interactive timeline to visualize the chronological evolution of the Voice NLP Suite. This structure was chosen because the source report is a time-based changelog, making a timeline the most intuitive navigation model for users. The page is split into three main parts: 1) An initial dashboard section provides a high-level summary and a chart comparing features vs. bug fixes, allowing users to quickly grasp the project's overall progress and focus. 2) The core of the app is the timeline itself, which acts as the primary navigation. Each version is a node, encouraging vertical exploration. 3) A dynamic content panel displays details for the selected version. This three-part structure (Overview -> Navigation -> Detail) follows the information architecture principle of progressive disclosure, presenting a simple overview first and allowing users to drill down for more complex information, preventing cognitive overload and creating a user-friendly, explorable narrative of the product's history. -->
-    <!-- Visualization & Content Choices: 
-        - Report Info: Overall development focus (Features vs. Bugs per version). -> Goal: Compare. -> Viz: Bar Chart (Chart.js Canvas). -> Interaction: Hover tooltips for exact counts, clickable bars to navigate timeline. -> Justification: A bar chart is the clearest way to compare discrete counts across categories (versions), showing the shift from bug-fixing to feature development. -> Library: Chart.js.
-        - Report Info: Chronological list of versions and dates. -> Goal: Change/Navigate. -> Viz: Vertical Timeline (HTML/CSS). -> Interaction: Clickable nodes to load version details. -> Justification: A timeline is the most logical and familiar pattern for chronological data, serving as an intuitive primary navigation. -> Method: HTML/CSS/JS.
-        - Report Info: Detailed feature and bug descriptions for each version. -> Goal: Inform. -> Viz: Dynamically updated text block. -> Interaction: Content appears on timeline node click. -> Justification: Separates detailed content from the main navigation, keeping the interface clean and focused. -> Method: JS (innerHTML update).
-        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
-     -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -100,6 +92,21 @@
 
     <script>
         const versionData = [
+            {
+                id: 'v7-0',
+                version: "v7.0",
+                title: "Streamlit Web Application",
+                date: "November 10, 2025",
+                features: [
+                    "Began development and testing of a new Streamlit web application to host the NLP suite.",
+                    "Integrating core voice analysis and synthesis functions into an interactive web interface.",
+                    "Focusing on robust file handling and user session state management."
+                ],
+                bugs: [
+                    "Addressing new challenges related to Streamlit's session state.",
+                    "Optimizing model loading times for a web server environment."
+                ]
+            },
             {
                 id: 'v6-0',
                 version: "v6.0",
