@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice NLP Suite - Interactive Development Timeline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The SPA is designed as a vertical interactive timeline to visualize the chronological evolution of the Voice NLP Suite. This structure was chosen because the source report is a time-based changelog, making a timeline the most intuitive navigation model for users. The page is split into three main parts: 1) An initial dashboard section provides a high-level summary and a chart comparing features vs. bug fixes, allowing users to quickly grasp the project's overall progress and focus. 2) The core of the app is the timeline itself, which acts as the primary navigation. Each version is a node, encouraging vertical exploration. 3) A dynamic content panel displays details for the selected version. This three-part structure (Overview -> Navigation -> Detail) follows the information architecture principle of progressive disclosure, presenting a simple overview first and allowing users to drill down for more complex information, preventing cognitive overload and creating a user-friendly, explorable narrative of the product's history. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Overall development focus (Features vs. Bugs per version). -> Goal: Compare. -> Viz: Bar Chart (Chart.js Canvas). -> Interaction: Hover tooltips for exact counts, clickable bars to navigate timeline. -> Justification: A bar chart is the clearest way to compare discrete counts across categories (versions), showing the shift from bug-fixing to feature development. -> Library: Chart.js.
+        - Report Info: Chronological list of versions and dates. -> Goal: Change/Navigate. -> Viz: Vertical Timeline (HTML/CSS). -> Interaction: Clickable nodes to load version details. -> Justification: A timeline is the most logical and familiar pattern for chronological data, serving as an intuitive primary navigation. -> Method: HTML/CSS/JS.
+        - Report Info: Detailed feature and bug descriptions for each version. -> Goal: Inform. -> Viz: Dynamically updated text block. -> Interaction: Content appears on timeline node click. -> Justification: Separates detailed content from the main navigation, keeping the interface clean and focused. -> Method: JS (innerHTML update).
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+     -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDF8F0; /* Warm Neutral Base */
+            color: #4A4E69; /* Muted Purple-Gray Text */
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: -29px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #C9ADA7; /* Muted Pink Accent */
+            border: 3px solid #FDF8F0;
+            z-index: 10;
+        }
+        .timeline-item.active::before {
+            background-color: #9A8C98; /* Muted Purple for Active State */
+            transform: scale(1.2);
+        }
+        .timeline-line {
+            position: absolute;
+            left: -21px;
+            top: 18px;
+            bottom: 0;
+            width: 2px;
+            background-color: #C9ADA7;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#4A4E69]">Voice NLP Suite</h1>
+            <p class="mt-4 text-lg text-[#9A8C98]">An Interactive Timeline of a Product's Evolution</p>
+        </header>
+
+        <section id="dashboard" class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#4A4E69] mb-4">Project Overview</h2>
+                <p class="max-w-3xl mx-auto text-[#9A8C98]">
+                    This dashboard provides a high-level summary of the Voice NLP Suite's development history. The chart below visualizes the focus of each development phase, comparing the number of major new features against significant bug fixes. This allows for a quick understanding of the project's journey from initial stabilization to feature enrichment.
+                </p>
+            </div>
+            <div class="chart-container">
+                <canvas id="overviewChart"></canvas>
+            </div>
+        </section>
+
+        <main>
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#4A4E69] mb-4">Development Timeline</h2>
+                <p class="max-w-3xl mx-auto text-[#9A8C98]">
+                    Explore the detailed history of the Voice NLP Suite by interacting with the timeline below. Each node represents a significant version release. Click on any version to see a detailed breakdown of the new features, enhancements, and bug fixes that were implemented during that phase of development.
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-12">
+                <div id="timeline-nav" class="md:col-span-1 lg:col-span-1 relative">
+                </div>
+                <div id="timeline-content" class="md:col-span-2 lg:col-span-3 bg-white/50 p-8 rounded-lg shadow-sm min-h-[500px]">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const versionData = [
+            {
+                id: 'v6-0',
+                version: "v6.0",
+                title: "Advanced Workflow",
+                date: "October 13, 2025",
+                features: [
+                    "Overhauled the input system to allow file selection (including automatic audio extraction from videos).",
+                    "Implemented automatic translation for synthesis.",
+                    "Added Smart Text Chunking to handle long text inputs, overcoming model character limits.",
+                    "Created a selective saving menu for all generated artifacts."
+                ],
+                bugs: [
+                    "Resolved a `NameError` crash on startup if optional libraries like `moviepy` were not installed.",
+                    "Removed unsupported languages (e.g., Gujarati) from the synthesis menu to prevent runtime errors.",
+                    "Fixed a `NameError` where the translation library was not defined within the scope of the synthesis loop."
+                ]
+            },
+            {
+                id: 'v5-0',
+                version: "v5.0",
+                title: "Expert Edition",
+                date: "October 12, 2025",
+                features: [
+                    "Exposed advanced controls for AI models, allowing user to select Whisper model size.",
+                    "Upgraded the emotion system to a 'Dynamic Prosody Control' menu.",
+                    "Unlocked the full multilingual capabilities of the synthesis engine."
+                ],
+                bugs: [
+                    "Implemented a definitive, resilient fix for the `Get shimmer (local)` analysis error by isolating metric calculations in protected blocks."
+                ]
+            },
+            {
+                id: 'v4-0',
+                version: "v4.0",
+                title: "Dynamic Synthesis & Reporting",
+                date: "October 11, 2025",
+                features: [
+                    "Introduced Emotional Voice Synthesis, allowing user to select an emotion to influence the tone of the cloned voice.",
+                    "Upgraded analysis reports to be more comprehensive and explanatory, adding descriptions for each metric."
+                ],
+                bugs: []
+            },
+            {
+                id: 'v3-9',
+                version: "v3.9",
+                title: "User-Controlled Preprocessing",
+                date: "October 10, 2025",
+                features: [
+                    "Replaced automatic noise reduction with an optional, user-controlled preprocessing menu.",
+                    "Gave the user a choice between three levels of noise reduction aggressiveness (Soft, Moderate, Robust)."
+                ],
+                bugs: [
+                    "Addressed user feedback that automatic noise reduction was degrading the quality of already-clear audio."
+                ]
+            },
+            {
+                id: 'v3-8',
+                version: "v3.8",
+                title: "Final Edition",
+                date: "October 9, 2025",
+                features: [
+                    "Restructured the main menu to be more intuitive.",
+                    "Added a live countdown timer during voice recording.",
+                    "Introduced an automatic noise reduction step."
+                ],
+                bugs: [
+                    "Implemented the first major fix for the recurring `Command \"Get shimmer (local)\" not available` error."
+                ]
+            },
+            {
+                id: 'v3-7',
+                version: "v3.7",
+                title: "Quality & UI Overhaul",
+                date: "October 8, 2025",
+                features: [
+                    "Integrated the `rich` library to create a modern, user-friendly command-line interface.",
+                    "Introduced an automated 'Quality Check' to assess the dynamic range of the synthesized voice."
+                ],
+                bugs: [
+                    "Corrected the UI color scheme to ensure visibility in both light and dark terminal themes."
+                ]
+            },
+            {
+                id: 'v3-6',
+                version: "v3.6",
+                title: "Visualization & Saving",
+                date: "October 7, 2025",
+                features: [
+                    "Added a voice comparison visualization (waveform graph).",
+                    "Implemented an option for the user to save the generated synthetic voice."
+                ],
+                bugs: []
+            },
+            {
+                id: 'v3-5',
+                version: "v3.5",
+                title: "Production Ready",
+                date: "October 6, 2025",
+                features: [
+                    "Added robust error handling for analysis functions.",
+                    "Replaced dictionary output with a clean, formatted report.",
+                    "Enabled high-fidelity settings for the TTS model."
+                ],
+                bugs: []
+            },
+            {
+                id: 'v3-0-3-4',
+                version: "v3.0 - v3.4",
+                title: "Full Spectrum Analysis & Bug Fixes",
+                date: "October 2-5, 2025",
+                features: [
+                    "Expanded the analysis engine to include Acoustic, Linguistic, Emotional, Biometric, and Technical metrics."
+                ],
+                bugs: [
+                    "Resolved multiple dependency conflicts with `transformers` and `langdetect` libraries.",
+                    "Implemented iterative patches for the recurring PyTorch `Weights only load failed` security error.",
+                    "Fixed a critical kernel crash on application exit.",
+                    "Corrected an audio format error that caused transcription to fail."
+                ]
+            },
+            {
+                id: 'v2-0',
+                version: "v2.0",
+                title: "PRO Edition (Voice Cloning)",
+                date: "September 28, 2025",
+                features: [
+                    "Introduced the core voice cloning capability using Coqui TTS library.",
+                    "Established the foundational workflow of recording, transcribing, and synthesizing voice."
+                ],
+                bugs: []
+            }
+        ];
+
+        const timelineNav = document.getElementById('timeline-nav');
+        const timelineContent = document.getElementById('timeline-content');
+        let activeItemId = null;
+
+        function displayVersionDetails(versionId) {
+            const version = versionData.find(v => v.id === versionId);
+            if (!version) return;
+            
+            let featuresHtml = '';
+            if(version.features.length > 0) {
+                featuresHtml = `<h3 class="text-xl font-bold text-[#4A4E69] mt-6 mb-3">Key Features & Enhancements</h3><ul class="list-disc list-inside space-y-2 text-[#9A8C98]">` + version.features.map(f => `<li>${f}</li>`).join('') + `</ul>`;
+            }
+
+            let bugsHtml = '';
+            if(version.bugs.length > 0) {
+                bugsHtml = `<h3 class="text-xl font-bold text-red-800/70 mt-6 mb-3">Significant Bugs Fixed</h3><ul class="list-disc list-inside space-y-2 text-[#9A8C98]">` + version.bugs.map(b => `<li>${b}</li>`).join('') + `</ul>`;
+            }
+
+            timelineContent.innerHTML = `
+                <span class="text-sm font-medium text-[#C9ADA7]">${version.date}</span>
+                <h2 class="text-3xl font-bold text-[#4A4E69] mt-2">${version.version}: ${version.title}</h2>
+                ${featuresHtml}
+                ${bugsHtml}
+            `;
+            
+            if (activeItemId) {
+                document.getElementById(activeItemId).classList.remove('active');
+            }
+            const activeItem = document.getElementById(version.id);
+            activeItem.classList.add('active');
+            activeItemId = version.id;
+        }
+
+        function init() {
+            let timelineHtml = '<div class="relative">';
+            versionData.forEach((version, index) => {
+                timelineHtml += `
+                    <div id="${version.id}" class="timeline-item relative pl-8 pb-10 cursor-pointer" onclick="displayVersionDetails('${version.id}')">
+                        ${index < versionData.length - 1 ? '<div class="timeline-line"></div>' : ''}
+                        <p class="text-sm text-[#9A8C98]">${version.date}</p>
+                        <h4 class="font-bold text-lg text-[#4A4E69]">${version.version}</h4>
+                        <p class="text-sm text-[#C9ADA7]">${version.title}</p>
+                    </div>
+                `;
+            });
+            timelineHtml += '</div>';
+            timelineNav.innerHTML = timelineHtml;
+
+            displayVersionDetails(versionData[0].id);
+            
+            const ctx = document.getElementById('overviewChart').getContext('2d');
+            const chartData = {
+                labels: versionData.map(v => v.version).reverse(),
+                datasets: [
+                    {
+                        label: 'Major Features',
+                        data: versionData.map(v => v.features.length).reverse(),
+                        backgroundColor: 'rgba(154, 140, 152, 0.6)',
+                        borderColor: 'rgba(154, 140, 152, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Bugs Fixed',
+                        data: versionData.map(v => v.bugs.length).reverse(),
+                        backgroundColor: 'rgba(201, 173, 167, 0.6)',
+                        borderColor: 'rgba(201, 173, 167, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            };
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#9A8C98',
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: 'rgba(74, 78, 105, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#9A8C98'
+                            },
+                             grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#4A4E69'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#4A4E69',
+                            titleColor: '#FDF8F0'
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
